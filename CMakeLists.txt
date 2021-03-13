@@ -9,10 +9,12 @@ project(hello_world)
 # initialize the Pico SDK
 pico_sdk_init()
 
-
 add_executable(hello_world
     src/main.cpp 
 )
+
+pico_enable_stdio_uart(hello_world 1)
+pico_enable_stdio_usb(hello_world 0)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(hello_world pico_stdlib)
@@ -28,8 +30,5 @@ target_include_directories(FreeRTOS PUBLIC FreeRTOS-Kernel/include include/ Free
 # create map/bin/hex/uf2 file in addition to ELF.
 pico_add_extra_outputs(hello_world)
 target_link_libraries(hello_world FreeRTOS pico-cpp)
-add_custom_command(TARGET hello_world
-        POST_BUILD
-        COMMAND arm-none-eabi-size hello_world.elf
-        )
+
 # rest of your project

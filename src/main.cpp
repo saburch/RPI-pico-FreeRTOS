@@ -1,45 +1,57 @@
-#include <stdio.h>
-#include "pico/stdlib.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "GPIO.hpp"
-#include <array>
+#include "stdio.h"
+#include "pico/stdlib.h"
 
+// Constants
+const uint16_t      STACK_SIZE      = 512; // bytes
+const TickType_t    ON_OFF_DURATION = 500; // ms
+const int           LED_PIN         = 25;
+const char* const   TASK_NAME       = "Blink Task";
 
-static pico_cpp::GPIO_Pin ledPin(25,pico_cpp::PinType::Output);
-void vTaskCode( void * pvParameters )
+[[noreturn]]
+void vTaskCode(void * pvParameters)
 {
-    /* The parameter value is expected to be 1 as 1 is passed in the
-    pvParameters value in the call to xTaskCreate() below. 
-    configASSERT( ( ( uint32_t ) pvParameters ) == 1 );
-    */
-    for( ;; )
+    (void) pvParameters;
+    pico_cpp::GPIO_Pin ledPin(LED_PIN,pico_cpp::PinType::Output);
+
+    for (;;)
     {
-            ledPin.set_high();
-            vTaskDelay(1000);
-            ledPin.set_low();
-            vTaskDelay(1000);
+        printf("Hi!\n");
+        ledPin.set_high();
+        vTaskDelay(ON_OFF_DURATION);
+        ledPin.set_low();
+        vTaskDelay(ON_OFF_DURATION);
     }
 }
 
-int main() {
+int main(int argc, char** argv)
+{
+    (void)argc;
+    (void)argv;
 
+    stdio_init_all();
 
-BaseType_t xReturned;
-TaskHandle_t xHandle = NULL;
-/* Create the task, storing the handle. */
-    xReturned = xTaskCreate(
-                    vTaskCode,       /* Function that implements the task. */
-                    "Blinky task",   /* Text name for the task. */
-                    512,             /* Stack size in words, not bytes. */
-                    ( void * ) 1,    /* Parameter passed into the task. */
-                    tskIDLE_PRIORITY,/* Priority at which the task is created. */
-                    &xHandle );   
+    TaskHandle_t taskHandle = nullptr;
+    const BaseType_t status = xTaskCreate(
+                vTaskCode,
+                TASK_NAME,
+                STACK_SIZE,
+                nullptr,
+                tskIDLE_PRIORITY,
+                &taskHandle
+            );
 
+    //if (status != pdFREERTOS_ERRNO_NONE)
+    //    return -1;
+
+    // Start the execution
     vTaskStartScheduler();
-    while(1)
-    {
-        configASSERT(0);    /* We should never get here */
-    }
 
+    for (;;)
+    {
+        // Whe should never enter this loop, since vTaskStartScheduler never returns
+        configASSERT(0);
+    }
 }
